@@ -1,4 +1,4 @@
-name: PHP Composer
+name: Update Holiday API
 
 on:
   schedule:
@@ -40,7 +40,7 @@ jobs:
           cd holiday-api
           composer run-script build
 
-      - name: Update api directory in repo A
+      - name: Update api directory
         env:
           TZ: "Asia/Tokyo"
         run: |
