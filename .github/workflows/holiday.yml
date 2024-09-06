@@ -1,0 +1,58 @@
+name: PHP Composer
+
+on:
+  schedule:
+    - cron: "0 18 1,31 * *" # 毎月1日と31日 UTC 18:00 (日本時間 午前3:00) に実行
+  workflow_dispatch: # 手動実行のオプション
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository Github Pages
+        uses: actions/checkout@v2
+        with:
+          path: visca-hp-develop.github.io
+
+      - name: Checkout repository Holiday API
+        uses: actions/checkout@v2
+        with:
+          repository: visca-hp-develop/holiday-api
+          token: ${{ secrets.READ_PRIVATE_REPO_ACCESS_TOKEN }}
+          path: holiday-api
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v2
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install Composer dependencies
+        run: |
+          cd holiday-api
+          composer install --no-dev --prefer-dist --no-progress
+
+      - name: Build application
+        run: |
+          cd holiday-api
+          composer run-script build
+
+      - name: Update api directory in repo A
+        env:
+          TZ: "Asia/Tokyo"
+        run: |
+          mkdir -p visca-hp-develop.github.io/docs/api/holiday/v1
+          rsync -av holiday-api/dist/ visca-hp-develop.github.io/docs/api/holiday/v1/
+          cd visca-hp-develop.github.io
+          git config user.name "from GitHub Actions"
+          git config user.email visca.github@gmail.com
+          git add --all
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "$(date +'%Y-%m-%d %H:%M:%S')"
+            git push
+          fi
