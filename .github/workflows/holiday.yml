@@ -2,7 +2,8 @@ name: Update Holiday API
 
 on:
   schedule:
-    - cron: "0 18 1,31 * *" # 毎月1日と31日 UTC 18:00 (日本時間 午前3:00) に実行
+    - cron: "0 18 * * *" # 毎日 UTC 18:00 (日本時間 午前3:00) に実行
+    # - cron: "0 18 1,31 * *" # 毎月1日と31日 UTC 18:00 (日本時間 午前3:00) に実行
   workflow_dispatch: # 手動実行のオプション
 
 jobs:
